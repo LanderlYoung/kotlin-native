@@ -6,8 +6,8 @@
 package org.jetbrains.kotlin.backend.konan
 
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
-import org.jetbrains.kotlin.serialization.js.ModuleKind
 import org.jetbrains.kotlin.konan.target.CompilerOutputKind
+import org.jetbrains.kotlin.serialization.js.ModuleKind
 
 class KonanConfigKeys {
     companion object {
@@ -84,7 +84,10 @@ class KonanConfigKeys {
                 = CompilerConfigurationKey.create("purge user-specified libs too")
         val REPOSITORIES: CompilerConfigurationKey<List<String>>
                 = CompilerConfigurationKey.create("library search path repositories")
-        val RUNTIME_FILE: CompilerConfigurationKey<String?> 
+        val SHRINK: CompilerConfigurationKey<Boolean?> = CompilerConfigurationKey.create("enable decode code shrink")
+        val SHRINK_KEEPS: CompilerConfigurationKey<List<String>> = CompilerConfigurationKey.create(
+                "library names to keep public API during decode code shrinking")
+        val RUNTIME_FILE: CompilerConfigurationKey<String?>
                 = CompilerConfigurationKey.create("override default runtime file path")
         val SOURCE_MAP: CompilerConfigurationKey<List<String>> 
                 = CompilerConfigurationKey.create("generate source map")

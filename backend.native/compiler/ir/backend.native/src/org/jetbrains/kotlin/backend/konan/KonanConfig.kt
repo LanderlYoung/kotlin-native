@@ -13,17 +13,16 @@ import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.STRONG_W
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+import org.jetbrains.kotlin.konan.KonanVersion
 import org.jetbrains.kotlin.konan.TempFiles
 import org.jetbrains.kotlin.konan.file.File
 import org.jetbrains.kotlin.konan.library.KonanLibrary
 import org.jetbrains.kotlin.konan.library.defaultResolver
 import org.jetbrains.kotlin.konan.library.libraryResolver
-import org.jetbrains.kotlin.konan.properties.loadProperties
-import org.jetbrains.kotlin.konan.target.*
-import org.jetbrains.kotlin.konan.KonanAbiVersion
-import org.jetbrains.kotlin.konan.KonanVersion
 import org.jetbrains.kotlin.konan.library.toUnresolvedLibraries
 import org.jetbrains.kotlin.konan.parseKonanVersion
+import org.jetbrains.kotlin.konan.properties.loadProperties
+import org.jetbrains.kotlin.konan.target.*
 
 class KonanConfig(val project: Project, val configuration: CompilerConfiguration) {
 
@@ -79,6 +78,10 @@ class KonanConfig(val project: Project, val configuration: CompilerConfiguration
 
     private val repositories = configuration.getList(KonanConfigKeys.REPOSITORIES)
     private fun resolverLogger(msg: String) = configuration.report(STRONG_WARNING, msg)
+
+    val shrink = configuration.get(KonanConfigKeys.SHRINK)
+
+    val shrinkKeptLibraries = configuration.getList(KonanConfigKeys.SHRINK_KEEPS)
 
     private val compatibleCompilerVersions: List<KonanVersion> =
         configuration.getList(KonanConfigKeys.COMPATIBLE_COMPILER_VERSIONS).map { it.parseKonanVersion() }

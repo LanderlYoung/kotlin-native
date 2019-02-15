@@ -162,12 +162,6 @@ internal val bitcodeLinkerPhase = makeKonanModuleOpPhase(
         op = { context, _ -> produceOutput(context) }
 )
 
-internal val bitcodeShrinkPhase = makeKonanModuleOpPhase(
-        name = "BitcodeShrinkPhase",
-        description = "Bitcode shrink",
-        op = { context, _ -> DeadCodeElimination(context).run() }
-)
-
 internal val verifyBitcodePhase = makeKonanModuleOpPhase(
         name = "VerifyBitcode",
         description = "Verify bitcode",

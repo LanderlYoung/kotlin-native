@@ -459,7 +459,7 @@ internal class Context(config: KonanConfig) : KonanBackendContext(config) {
 
     fun shouldOptimize() = config.configuration.getBoolean(KonanConfigKeys.OPTIMIZATION)
 
-    fun shouldDeadCodeElimination() = config.shrink ?: shouldOptimize()
+    fun shouldEliminateDeadCode() = config.shrink ?: shouldOptimize()
 
     override var inVerbosePhase = false
     override fun log(message: () -> String) {

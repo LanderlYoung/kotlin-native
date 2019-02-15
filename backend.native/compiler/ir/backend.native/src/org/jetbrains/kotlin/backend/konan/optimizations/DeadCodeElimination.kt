@@ -6,12 +6,12 @@
 package org.jetbrains.kotlin.backend.konan.optimizations
 
 import org.jetbrains.kotlin.backend.konan.Context
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 
-internal class DeadCodeElimination(private val context: Context) {
+internal class DeadCodeElimination(
+        private val context: Context,
+        private val irModule: IrModuleFragment) {
     internal fun run() {
-        if (context.shouldDeadCodeElimination()) {
-            TODO("need impl")
-        }
     }
 }
 

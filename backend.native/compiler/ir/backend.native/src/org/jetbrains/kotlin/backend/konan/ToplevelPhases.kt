@@ -145,9 +145,21 @@ internal val setUpLinkStagePhase = konanUnitPhase(
         description = "Set up link stage"
 )
 
-internal val objectFilesPhase = konanUnitPhase(
-        op = { linkStage.makeObjectFiles() },
-        name = "ObjectFiles",
+internal val linkBitcodePhase = konanUnitPhase(
+        op = { linkStage.linkBitcode() },
+        name = "LinkBitcode",
+        description = "combine all bitcode files into one"
+)
+
+internal val eliminationDeadCodePhase = konanUnitPhase(
+        op = { linkStage.eliminateDeadCode() },
+        name = "EliminateDeadCode",
+        description = "Eliminate dead code"
+)
+
+internal val objectFilePhase = konanUnitPhase(
+        op = { linkStage.makeObjectFile() },
+        name = "ObjectFile",
         description = "Bitcode to object file"
 )
 
@@ -161,7 +173,9 @@ internal val linkPhase = namedUnitPhase(
         name = "Link",
         description = "Link stage",
         lower = setUpLinkStagePhase then
-                objectFilesPhase then
+                linkBitcodePhase then
+                eliminationDeadCodePhase then
+                objectFilePhase then
                 linkerPhase
 )
 
@@ -237,7 +251,6 @@ internal val toplevelPhase = namedUnitPhase(
                                                 cStubsPhase then
                                                 bitcodeLinkerPhase
                                 ) then
-                                bitcodeShrinkPhase then
                                 verifyBitcodePhase then
                                 printBitcodePhase then
                                 unitSink()

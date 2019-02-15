@@ -43,7 +43,7 @@ internal class LinkStage(val context: Context) {
                     .logWith(context::log)
                     .execute()
 
-    private fun llvmLto(files: List<BitcodeFile>): ObjectFile {
+    private fun llvmLto(file: BitcodeFile): ObjectFile {
         val combined = temporary("combined", ".o")
 
         val tool = "${platform.absoluteLlvmHome}/bin/llvm-lto"
@@ -56,14 +56,20 @@ internal class LinkStage(val context: Context) {
             else -> command.addNonEmpty(platform.llvmLtoNooptFlags)
         }
         command.addNonEmpty(platform.llvmLtoDynamicFlags)
-        command.addNonEmpty(files)
+        command.add(file)
         runTool(command)
 
         return combined
     }
 
+    private fun llvmLinkBitcode(files: List<BitcodeFile>): BitcodeFile {
+        val bitcode = temporary("bitcode", ".bc")
+        hostLlvmTool("llvm-link", "-o", bitcode, *files.toTypedArray())
+        return bitcode
+    }
+
     private fun temporary(name: String, suffix: String): String =
-            context.config.tempFiles.create(name, suffix).absolutePath
+            context.config.tempFiles.create(name, suffix).deleteOnExit().absolutePath
 
     private fun targetTool(tool: String, vararg arg: String) {
         val absoluteToolName = "${platform.absoluteTargetToolchain}/bin/$tool"
@@ -75,19 +81,16 @@ internal class LinkStage(val context: Context) {
         runTool(absoluteToolName, *arg)
     }
 
-    private fun bitcodeToWasm(bitcodeFiles: List<BitcodeFile>): String {
+    private fun bitcodeToWasm(bitcodeFile: BitcodeFile): String {
         val configurables = platform.configurables as WasmConfigurables
 
-        val combinedBc = temporary("combined", ".bc")
-        // TODO: use -only-needed for the stdlib
-        hostLlvmTool("llvm-link", *bitcodeFiles.toTypedArray(), "-o", combinedBc)
-        val optFlags = (configurables.optFlags + when {
+       val optFlags = (configurables.optFlags + when {
             optimize -> configurables.optOptFlags
             debug -> configurables.optDebugFlags
             else -> configurables.optNooptFlags
         } + llvmProfilingFlags()).toTypedArray()
         val optimizedBc = temporary("optimized", ".bc")
-        hostLlvmTool("opt", combinedBc, "-o", optimizedBc, *optFlags)
+        hostLlvmTool("opt", bitcodeFile, "-o", optimizedBc, *optFlags)
         val llcFlags = (configurables.llcFlags + when {
             optimize -> configurables.llcOptFlags
             debug -> configurables.llcDebugFlags
@@ -100,13 +103,10 @@ internal class LinkStage(val context: Context) {
         return linkedWasm
     }
 
-    private fun llvmLinkAndLlc(bitcodeFiles: List<BitcodeFile>): String {
-        val combinedBc = temporary("combined", ".bc")
-        hostLlvmTool("llvm-link", "-o", combinedBc, *bitcodeFiles.toTypedArray())
-
+    private fun llvmLinkAndLlc(bitcodeFile: BitcodeFile): String {
         val optimizedBc = temporary("optimized", ".bc")
         val optFlags = llvmProfilingFlags() + listOf("-O3", "-internalize", "-globaldce")
-        hostLlvmTool("opt", combinedBc, "-o=$optimizedBc", *optFlags.toTypedArray())
+        hostLlvmTool("opt", bitcodeFile, "-o=$optimizedBc", *optFlags.toTypedArray())
 
         val combinedO = temporary("combined", ".o")
         val llcFlags = llvmProfilingFlags() + listOf("-function-sections", "-data-sections")
@@ -199,17 +199,23 @@ internal class LinkStage(val context: Context) {
 
     val objectFiles = mutableListOf<String>()
 
-    fun makeObjectFiles() {
+    private lateinit var linkedBitcodeFile: String
+
+    fun linkBitcode() {
         val bitcodeFiles = listOf(emitted) +
                 libraries.map { it.bitcodePaths }.flatten().filter { it.isBitcode }
+        linkedBitcodeFile = llvmLinkBitcode(bitcodeFiles)
+    }
 
+    fun eliminateDeadCode() {
+        // TODO
+    }
+
+    fun makeObjectFile() {
         objectFiles.add(when (platform.configurables) {
-            is WasmConfigurables
-            -> bitcodeToWasm(bitcodeFiles)
-            is ZephyrConfigurables
-            -> llvmLinkAndLlc(bitcodeFiles)
-            else
-            -> llvmLto(bitcodeFiles)
+            is WasmConfigurables -> bitcodeToWasm(linkedBitcodeFile)
+            is ZephyrConfigurables -> llvmLinkAndLlc(linkedBitcodeFile)
+            else -> llvmLto(linkedBitcodeFile)
         })
     }
 

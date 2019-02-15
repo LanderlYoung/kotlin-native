@@ -5,9 +5,14 @@
 
 package org.jetbrains.kotlin.backend.konan.llvm
 
-import llvm.*
-import org.jetbrains.kotlin.backend.konan.*
+import llvm.DICreateBuilder
+import llvm.DIFinalize
+import llvm.LLVMAddAlias
+import llvm.LLVMModuleCreateWithName
+import org.jetbrains.kotlin.backend.konan.makeKonanModuleOpPhase
 import org.jetbrains.kotlin.backend.konan.optimizations.*
+import org.jetbrains.kotlin.backend.konan.produceCStubs
+import org.jetbrains.kotlin.backend.konan.produceOutput
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 
 internal val contextLLVMSetupPhase = makeKonanModuleOpPhase(
@@ -155,6 +160,12 @@ internal val bitcodeLinkerPhase = makeKonanModuleOpPhase(
         name = "BitcodeLinker",
         description = "Bitcode linking",
         op = { context, _ -> produceOutput(context) }
+)
+
+internal val bitcodeShrinkPhase = makeKonanModuleOpPhase(
+        name = "BitcodeShrinkPhase",
+        description = "Bitcode shrink",
+        op = { context, _ -> DeadCodeElimination(context).run() }
 )
 
 internal val verifyBitcodePhase = makeKonanModuleOpPhase(

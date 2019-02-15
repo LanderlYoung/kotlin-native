@@ -10,6 +10,7 @@ import llvm.LLVMModuleRef
 import org.jetbrains.kotlin.backend.common.DumpIrTreeWithDescriptorsVisitor
 import org.jetbrains.kotlin.backend.common.descriptors.WrappedSimpleFunctionDescriptor
 import org.jetbrains.kotlin.backend.common.descriptors.WrappedTypeParameterDescriptor
+import org.jetbrains.kotlin.backend.common.ir.copyTo
 import org.jetbrains.kotlin.backend.common.phaser.PhaseConfig
 import org.jetbrains.kotlin.backend.common.validateIrModule
 import org.jetbrains.kotlin.backend.konan.descriptors.*
@@ -22,6 +23,8 @@ import org.jetbrains.kotlin.backend.konan.optimizations.DataFlowIR
 import org.jetbrains.kotlin.backend.konan.optimizations.Devirtualization
 import org.jetbrains.kotlin.backend.konan.optimizations.ExternalModulesDFG
 import org.jetbrains.kotlin.backend.konan.optimizations.ModuleDFG
+import org.jetbrains.kotlin.builtins.konan.KonanBuiltIns
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.descriptors.impl.PropertyDescriptorImpl
@@ -33,14 +36,16 @@ import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.IrFieldImpl
 import org.jetbrains.kotlin.ir.declarations.impl.IrFunctionImpl
 import org.jetbrains.kotlin.ir.declarations.impl.IrTypeParameterImpl
-import org.jetbrains.kotlin.ir.util.*
+import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
+import org.jetbrains.kotlin.ir.symbols.impl.IrTypeParameterSymbolImpl
+import org.jetbrains.kotlin.ir.util.DumpIrTreeVisitor
+import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.endOffsetOrUndefined
+import org.jetbrains.kotlin.ir.util.startOffsetOrUndefined
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
-import org.jetbrains.kotlin.builtins.konan.KonanBuiltIns
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.konan.target.CompilerOutputKind
 import org.jetbrains.kotlin.metadata.konan.KonanProtoBuf
 import org.jetbrains.kotlin.name.FqName
@@ -55,8 +60,6 @@ import org.jetbrains.kotlin.serialization.deserialization.getName
 import java.lang.System.out
 import kotlin.LazyThreadSafetyMode.PUBLICATION
 import kotlin.reflect.KProperty
-import org.jetbrains.kotlin.backend.common.ir.copyTo
-import org.jetbrains.kotlin.ir.symbols.impl.IrTypeParameterSymbolImpl
 
 /**
  * Offset for synthetic elements created by lowerings and not attributable to other places in the source code.
@@ -455,6 +458,8 @@ internal class Context(config: KonanConfig) : KonanBackendContext(config) {
     fun shouldContainDebugInfo() = config.debug
 
     fun shouldOptimize() = config.configuration.getBoolean(KonanConfigKeys.OPTIMIZATION)
+
+    fun shouldDeadCodeElimination() = config.shrink ?: shouldOptimize()
 
     override var inVerbosePhase = false
     override fun log(message: () -> String) {

@@ -218,7 +218,7 @@ internal val toplevelPhase = namedUnitPhase(
                                                                 returnsInsertionPhase
                                                 ) then
                                                 checkDeclarationParentsPhase then
-//                                                validateIrModulePhase then // Temporarily disabled until moving to new IR finished.
+                                                // validateIrModulePhase then // Temporarily disabled until moving to new IR finished.
                                                 moduleIndexForCodegenPhase
                                 ) then
                                 namedIrModulePhase(
@@ -237,9 +237,9 @@ internal val toplevelPhase = namedUnitPhase(
                                                 cStubsPhase then
                                                 bitcodeLinkerPhase
                                 ) then
+                                bitcodeShrinkPhase then
                                 verifyBitcodePhase then
-                                printBitcodePhase
-                                then
+                                printBitcodePhase then
                                 unitSink()
                 ) then
                 linkPhase

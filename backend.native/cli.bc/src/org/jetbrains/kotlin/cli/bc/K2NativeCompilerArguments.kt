@@ -60,7 +60,7 @@ class K2NativeCompilerArguments : CommonCompilerArguments() {
     @Argument(value = "-nopack", description = "Don't pack the library into a klib file")
     var nopack: Boolean = false
 
-    @Argument(value="-linker-options", deprecatedName = "-linkerOpts", valueDescription = "<arg>", description = "Pass arguments to linker", delimiter = " ")
+    @Argument(value = "-linker-options", deprecatedName = "-linkerOpts", valueDescription = "<arg>", description = "Pass arguments to linker", delimiter = " ")
     var linkerArguments: Array<String>? = null
 
     @Argument(value = "-nostdlib", description = "Don't link with stdlib")
@@ -82,6 +82,16 @@ class K2NativeCompilerArguments : CommonCompilerArguments() {
 
     @Argument(value = "-repo", shortName = "-r", valueDescription = "<path>", description = "Library search path")
     var repositories: Array<String>? = null
+
+    @Argument(value = "-shrink", shortName = "-s",
+            valueDescription = "{true|false}",
+            description = "Shrink unused code. When -opt is assigned, shrink is auto enabled.")
+    var shrink: Boolean? = null
+
+    @Argument(value = "-shrink-keeps", shortName = "-sk",
+            valueDescription = "<library name>",
+            description = "Keep library public APIs during shrink")
+    var shrinkKeeps: Array<String> = emptyArray()
 
     @Argument(value = "-target", valueDescription = "<target>", description = "Set hardware target")
     var target: String? = null

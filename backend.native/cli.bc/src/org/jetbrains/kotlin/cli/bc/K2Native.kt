@@ -25,11 +25,11 @@ import org.jetbrains.kotlin.config.Services
 import org.jetbrains.kotlin.konan.KonanVersion
 import org.jetbrains.kotlin.konan.file.File
 import org.jetbrains.kotlin.konan.target.CompilerOutputKind
-import org.jetbrains.kotlin.konan.util.*
+import org.jetbrains.kotlin.konan.util.profile
 import org.jetbrains.kotlin.metadata.deserialization.BinaryVersion
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.utils.KotlinPaths
 import org.jetbrains.kotlin.serialization.konan.KonanMetadataVersion
+import org.jetbrains.kotlin.utils.KotlinPaths
 
 private class K2NativeCompilerPerformanceManager: CommonCompilerPerformanceManager("Kotlin to Native Compiler")
 class K2Native : CLICompiler<K2NativeCompilerArguments>() {
@@ -131,6 +131,9 @@ class K2Native : CLICompiler<K2NativeCompilerArguments>() {
                         arguments.nativeLibraries.toNonNullList())
                 put(REPOSITORIES,
                         arguments.repositories.toNonNullList())
+                putIfNotNull(SHRINK, arguments.shrink)
+                put(SHRINK_KEEPS,
+                        arguments.shrinkKeeps.toNonNullList())
 
                 // TODO: Collect all the explicit file names into an object
                 // and teach the compiler to work with temporaries and -save-temps.

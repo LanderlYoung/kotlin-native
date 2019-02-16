@@ -208,7 +208,10 @@ internal class LinkStage(val context: Context) {
     }
 
     fun eliminateDeadCode() {
-        // TODO
+        if (context.shouldEliminateDeadCode()
+                && context.config.produce.isNativeBinary) {
+            // do this
+        }
     }
 
     fun makeObjectFile() {

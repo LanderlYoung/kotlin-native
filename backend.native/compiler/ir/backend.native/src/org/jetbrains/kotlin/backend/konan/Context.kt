@@ -19,10 +19,7 @@ import org.jetbrains.kotlin.backend.konan.library.KonanLibraryWriter
 import org.jetbrains.kotlin.backend.konan.library.LinkData
 import org.jetbrains.kotlin.backend.konan.llvm.*
 import org.jetbrains.kotlin.backend.konan.lower.DECLARATION_ORIGIN_BRIDGE_METHOD
-import org.jetbrains.kotlin.backend.konan.optimizations.DataFlowIR
-import org.jetbrains.kotlin.backend.konan.optimizations.Devirtualization
-import org.jetbrains.kotlin.backend.konan.optimizations.ExternalModulesDFG
-import org.jetbrains.kotlin.backend.konan.optimizations.ModuleDFG
+import org.jetbrains.kotlin.backend.konan.optimizations.*
 import org.jetbrains.kotlin.builtins.konan.KonanBuiltIns
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.descriptors.*
@@ -459,7 +456,7 @@ internal class Context(config: KonanConfig) : KonanBackendContext(config) {
 
     fun shouldOptimize() = config.configuration.getBoolean(KonanConfigKeys.OPTIMIZATION)
 
-    fun shouldDeadCodeElimination() = config.shrink ?: shouldOptimize()
+    fun shouldEliminateDeadCode() = config.shrink ?: shouldOptimize()
 
     override var inVerbosePhase = false
     override fun log(message: () -> String) {
@@ -474,6 +471,8 @@ internal class Context(config: KonanConfig) : KonanBackendContext(config) {
     lateinit var lifetimes: MutableMap<IrElement, Lifetime>
     lateinit var codegenVisitor: CodeGeneratorVisitor
     var devirtualizationAnalysisResult: Devirtualization.AnalysisResult? = null
+    /** eliminated symbols */
+    var deadCodeEliminationResult: DeadCodeEliminationResult? = null
 
     val isNativeLibrary: Boolean by lazy {
         val kind = config.configuration.get(KonanConfigKeys.PRODUCE)

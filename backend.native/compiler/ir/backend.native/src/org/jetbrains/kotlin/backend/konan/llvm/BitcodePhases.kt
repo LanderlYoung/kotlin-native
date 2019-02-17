@@ -5,9 +5,14 @@
 
 package org.jetbrains.kotlin.backend.konan.llvm
 
-import llvm.*
-import org.jetbrains.kotlin.backend.konan.*
+import llvm.DICreateBuilder
+import llvm.DIFinalize
+import llvm.LLVMAddAlias
+import llvm.LLVMModuleCreateWithName
+import org.jetbrains.kotlin.backend.konan.makeKonanModuleOpPhase
 import org.jetbrains.kotlin.backend.konan.optimizations.*
+import org.jetbrains.kotlin.backend.konan.produceCStubs
+import org.jetbrains.kotlin.backend.konan.produceOutput
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 
 internal val contextLLVMSetupPhase = makeKonanModuleOpPhase(
@@ -26,6 +31,12 @@ internal val contextLLVMSetupPhase = makeKonanModuleOpPhase(
             context.lifetimes = mutableMapOf()
             context.codegenVisitor = CodeGeneratorVisitor(context, context.lifetimes)
         }
+)
+
+internal val deadCodeElimination = makeKonanModuleOpPhase(
+        name = "DeadCodeElimination",
+        description = "Eliminate dead code",
+        op = { context, irModule -> eliminateDeadCode(context, irModule) }
 )
 
 internal val RTTIPhase = makeKonanModuleOpPhase(

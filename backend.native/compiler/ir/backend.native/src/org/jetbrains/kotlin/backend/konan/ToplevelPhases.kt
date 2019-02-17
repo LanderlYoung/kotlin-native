@@ -225,6 +225,7 @@ internal val toplevelPhase = namedUnitPhase(
                                         name = "Bitcode",
                                         description = "LLVM Bitcode generation",
                                         lower = contextLLVMSetupPhase then
+                                                deadCodeElimination then
                                                 RTTIPhase then
                                                 generateDebugInfoHeaderPhase then
                                                 buildDFGPhase then
